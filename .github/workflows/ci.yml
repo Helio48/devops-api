@@ -1,0 +1,42 @@
+name: Pipeline CI - DevOps API
+
+on:
+  push:
+    branches: [main]
+
+  pull_request:
+    branches: [main]
+
+jobs:
+  docker-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar codigo do repositorio
+        uses: actions/checkout@v4
+
+      - name: Construir imagem Docker
+        run: docker build -t devops-api .
+
+      - name: Iniciar container Docker
+        run: docker run -d --name devops-container -p 5000:5000 devops-api
+
+      - name: Aguardar inicializacao da API
+        run: |
+          for i in {1..15}; do
+            if curl --fail --silent http://localhost:5000/status > /dev/null; then
+              echo "API iniciada com sucesso!"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Erro: API nao iniciou."
+          docker logs devops-container
+          exit 1
+
+      - name: Executar testes automatizados
+        run: docker exec devops-container python -m pytest -v
+
+      - name: Exibir logs do container
+        if: always()
+        run: docker logs devops-container
