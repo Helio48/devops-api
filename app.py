@@ -14,7 +14,7 @@ def home():
 @app.route("/status")
 def status():
     return jsonify({
-        "status": "erro",
+        "status": "ok",
         "mensagem": "Aplicacao funcionando corretamente!"
     })
 
